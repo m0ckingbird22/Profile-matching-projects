@@ -1,22 +1,22 @@
-  package com.bkk.spk.model;
+package com.bkk.spk.model;
 
-public class NilaiSiswa {
+public class NilaiKandidat {
     private int idNilai;
-    private Siswa siswa;
+    private Kandidat kandidat;
     private Kriteria kriteria;
     private double nilaiKandidat;
 
-    public NilaiSiswa() {}
+    public NilaiKandidat() {}
 
-    public NilaiSiswa(int idNilai, Siswa siswa, Kriteria kriteria, double nilaiKandidat) {
+    public NilaiKandidat(int idNilai, Kandidat kandidat, Kriteria kriteria, double nilaiKandidat) {
         this.idNilai = idNilai;
-        this.siswa = siswa;
+        this.kandidat = kandidat;
         this.kriteria = kriteria;
         this.nilaiKandidat = nilaiKandidat;
     }
 
-    public NilaiSiswa(Siswa siswa, Kriteria kriteria, double nilaiKandidat) {
-        this.siswa = siswa;
+    public NilaiKandidat(Kandidat kandidat, Kriteria kriteria, double nilaiKandidat) {
+        this.kandidat = kandidat;
         this.kriteria = kriteria;
         this.nilaiKandidat = nilaiKandidat;
     }
@@ -24,8 +24,8 @@ public class NilaiSiswa {
     public int getIdNilai() { return idNilai; }
     public void setIdNilai(int idNilai) { this.idNilai = idNilai; }
 
-    public Siswa getSiswa() { return siswa; }
-    public void setSiswa(Siswa siswa) { this.siswa = siswa; }
+    public Kandidat getKandidat() { return kandidat; }
+    public void setKandidat(Kandidat kandidat) { this.kandidat = kandidat; }
 
     public Kriteria getKriteria() { return kriteria; }
     public void setKriteria(Kriteria kriteria) { this.kriteria = kriteria; }

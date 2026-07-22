@@ -29,16 +29,16 @@ import java.util.List;
 /**
  * Panel untuk menjalankan proses Profile Matching per lowongan.
  *
- * Setelah klik "Proses Seleksi":
+ * Setelah klik "Proses Perhitungan":
  *   1. Panggil ProfileMatchingService.prosesSeleksi(idLowongan, admin).
- *      Service hapus hasil lama → hitung gap → hitung NCF/NSF/total → ranking → simpan.
- *   2. Tampilkan hasil di tabel (Rank, NISN, Nama, Jurusan, NCF, NSF, Total, Status).
+ *      Service hapus hasil lama -> hitung gap -> hitung NCF/NSF/total -> ranking -> simpan.
+ *   2. Tampilkan hasil di tabel (Rank, NISN, Nama, NCF, NSF, Total, Status).
  *   3. Status: ranking <= kuota -> LULUS, selebihnya -> Belum Lulus.
  */
-public class ProsesSeleksiPanel extends JPanel {
+public class ProsesPerhitunganPanel extends JPanel {
 
     private static final String[] COLUMNS = {
-        "Rank", "NISN", "Nama", "Jurusan", "NCF", "NSF", "Total", "Status"
+        "Rank", "NISN", "Nama", "NCF", "NSF", "Total", "Status"
     };
 
     private final LowonganDAO lowonganDAO = new LowonganDAO();
@@ -49,7 +49,7 @@ public class ProsesSeleksiPanel extends JPanel {
     private final JTable table;
     private final JTextArea txtLog = new JTextArea(6, 60);
 
-    public ProsesSeleksiPanel() {
+    public ProsesPerhitunganPanel() {
         setLayout(new BorderLayout(0, 12));
         setBackground(new java.awt.Color(0xFD, 0xEA, 0xF1));
         setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
@@ -74,7 +74,7 @@ public class ProsesSeleksiPanel extends JPanel {
         txtLog.setEditable(false);
         txtLog.setFont(new Font("Consolas", Font.PLAIN, 12));
         txtLog.setBackground(new Color(0xFA, 0xFA, 0xFA));
-        txtLog.setText("Log proses seleksi akan muncul di sini.\n");
+        txtLog.setText("Log proses perhitungan akan muncul di sini.\n");
         JScrollPane scrollLog = new JScrollPane(txtLog);
         scrollLog.setPreferredSize(new java.awt.Dimension(60, 140));
         scrollLog.setBorder(BorderFactory.createTitledBorder("Log"));
@@ -87,7 +87,7 @@ public class ProsesSeleksiPanel extends JPanel {
         JPanel toolbar = new JPanel(new BorderLayout());
         toolbar.setOpaque(false);
 
-        JLabel lblTitle = new JLabel("Proses Seleksi");
+        JLabel lblTitle = new JLabel("Proses Perhitungan");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
         toolbar.add(lblTitle, BorderLayout.WEST);
 
@@ -97,7 +97,7 @@ public class ProsesSeleksiPanel extends JPanel {
         cbLowongan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         right.add(cbLowongan);
 
-        JButton btnProses = new JButton("Proses Seleksi");
+        JButton btnProses = new JButton("Proses Perhitungan");
         ButtonStyle.primary(btnProses);
         btnProses.addActionListener(e -> onProses());
         right.add(btnProses);
@@ -128,20 +128,18 @@ public class ProsesSeleksiPanel extends JPanel {
 
         int confirm = JOptionPane.showConfirmDialog(
             this,
-            "Jalankan proses seleksi untuk lowongan \"" + selected.getPosisi() + "\"?\n"
+            "Jalankan proses perhitungan untuk lowongan \"" + selected.getPosisi() + "\"?\n"
                 + "Hasil proses lama untuk lowongan ini akan ditimpa.",
             "Konfirmasi Proses",
             JOptionPane.YES_NO_OPTION
         );
         if (confirm != JOptionPane.YES_OPTION) return;
 
-        appendLog("Memulai proses seleksi untuk: " + selected);
+        appendLog("Memulai proses perhitungan untuk: " + selected);
         appendLog("Kuota: " + selected.getKuota() + " | Admin: " + admin.getNama());
 
-        // Kasih feedback visual bahwa proses sedang jalan
         setEnabledAll(false);
 
-        // Proses di thread terpisah supaya UI gak freeze (DB bisa lambat untuk 50 siswa)
         new Thread(() -> {
             try {
                 long t0 = System.currentTimeMillis();
@@ -154,7 +152,7 @@ public class ProsesSeleksiPanel extends JPanel {
                     setEnabledAll(true);
                     JOptionPane.showMessageDialog(
                         this,
-                        "Proses seleksi selesai.\nKandidat diproses: " + hasil.size() + "\nKuota: " + selected.getKuota(),
+                        "Proses perhitungan selesai.\nKandidat diproses: " + hasil.size() + "\nKuota: " + selected.getKuota(),
                         "Sukses",
                         JOptionPane.INFORMATION_MESSAGE
                     );
@@ -166,13 +164,13 @@ public class ProsesSeleksiPanel extends JPanel {
                     setEnabledAll(true);
                     JOptionPane.showMessageDialog(
                         this,
-                        "Gagal proses seleksi:\n" + ex.getMessage(),
+                        "Gagal proses perhitungan:\n" + ex.getMessage(),
                         "Error",
                         JOptionPane.ERROR_MESSAGE
                     );
                 });
             }
-        }, "proses-seleksi").start();
+        }, "proses-perhitungan").start();
     }
 
     private void tampilkanHasil(List<HasilAkhir> hasil, int kuota) {
@@ -181,9 +179,8 @@ public class ProsesSeleksiPanel extends JPanel {
             String status = (h.getRanking() <= kuota) ? "LULUS" : "Belum Lulus";
             tableModel.addRow(new Object[]{
                 h.getRanking(),
-                h.getSiswa().getNisn(),
-                h.getSiswa().getNama(),
-                h.getSiswa().getJurusan(),
+                h.getKandidat().getNisn(),
+                h.getKandidat().getNama(),
                 String.format("%.3f", h.getNcf()),
                 String.format("%.3f", h.getNsf()),
                 String.format("%.3f", h.getNilaiTotal()),
@@ -196,7 +193,6 @@ public class ProsesSeleksiPanel extends JPanel {
         cbLowongan.setEnabled(enabled);
         for (java.awt.Component c : getComponents()) {
             if (c instanceof JPanel) {
-                // toolbar adalah panel pertama — toggle tombolnya
                 for (java.awt.Component child : ((JPanel) c).getComponents()) {
                     if (child instanceof JButton) child.setEnabled(enabled);
                 }

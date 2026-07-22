@@ -1,10 +1,10 @@
 package com.bkk.spk.dao;
 
 import com.bkk.spk.model.HasilGap;
+import com.bkk.spk.model.Kandidat;
 import com.bkk.spk.model.Kriteria;
 import com.bkk.spk.model.Lowongan;
 import com.bkk.spk.model.Perusahaan;
-import com.bkk.spk.model.Siswa;
 import com.bkk.spk.util.Koneksi;
 
 import java.sql.Connection;
@@ -22,26 +22,26 @@ public class HasilGapDAO {
 
     private static final String SELECT_BASE =
         "SELECT hg.*, " +
-        "  s.nisn, s.nama AS nama_siswa, s.jurusan, s.kelas, s.tahun_lulus, " +
+        "  knd.nisn, knd.nama AS nama_kandidat, knd.tahun_lulus, " +
         "  l.posisi, l.deskripsi, l.kuota, l.status, " +
         "  p.id_perusahaan, p.nama_perusahaan, p.alamat, p.bidang_industri, " +
         "  k.kode_kriteria, k.nama_kriteria, k.jenis_faktor " +
         "FROM tb_hasil_gap hg " +
-        "JOIN tb_siswa s ON hg.id_siswa = s.id_siswa " +
+        "JOIN tb_kandidat knd ON hg.id_kandidat = knd.id_kandidat " +
         "JOIN tb_lowongan l ON hg.id_lowongan = l.id_lowongan " +
         "JOIN tb_perusahaan p ON l.id_perusahaan = p.id_perusahaan " +
         "JOIN tb_kriteria k ON hg.id_kriteria = k.id_kriteria";
 
-    // Insert banyak baris gap sekaligus (1 siswa x 8 kriteria) dalam 1 transaksi
+    // Insert banyak baris gap sekaligus (1 kandidat x semua kriteria) dalam 1 transaksi
     public boolean insertBatch(List<HasilGap> daftarGap) {
-        String sql = "INSERT INTO tb_hasil_gap (id_siswa, id_lowongan, id_kriteria, nilai_gap, bobot_nilai) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO tb_hasil_gap (id_kandidat, id_lowongan, id_kriteria, nilai_gap, bobot_nilai) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = Koneksi.getConnection()) {
             conn.setAutoCommit(false);
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (HasilGap gap : daftarGap) {
-                    ps.setInt(1, gap.getSiswa().getIdSiswa());
+                    ps.setInt(1, gap.getKandidat().getIdKandidat());
                     ps.setInt(2, gap.getLowongan().getIdLowongan());
                     ps.setInt(3, gap.getKriteria().getIdKriteria());
                     ps.setInt(4, gap.getNilaiGap());
@@ -68,14 +68,14 @@ public class HasilGapDAO {
         }
     }
 
-    public List<HasilGap> getBySiswaDanLowongan(int idSiswa, int idLowongan) {
+    public List<HasilGap> getByKandidatDanLowongan(int idKandidat, int idLowongan) {
         List<HasilGap> daftar = new ArrayList<>();
-        String sql = SELECT_BASE + " WHERE hg.id_siswa = ? AND hg.id_lowongan = ? ORDER BY k.kode_kriteria ASC";
+        String sql = SELECT_BASE + " WHERE hg.id_kandidat = ? AND hg.id_lowongan = ? ORDER BY k.kode_kriteria ASC";
 
         try (Connection conn = Koneksi.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, idSiswa);
+            ps.setInt(1, idKandidat);
             ps.setInt(2, idLowongan);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -98,7 +98,7 @@ public class HasilGapDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idLowongan);
-            ps.executeUpdate(); // boleh 0 baris terhapus (lowongan baru pertama diproses), itu bukan error
+            ps.executeUpdate();
             return true;
 
         } catch (SQLException e) {
@@ -109,13 +109,11 @@ public class HasilGapDAO {
     }
 
     private HasilGap mapResultSetToHasilGap(ResultSet rs) throws SQLException {
-        Siswa siswa = new Siswa();
-        siswa.setIdSiswa(rs.getInt("id_siswa"));
-        siswa.setNisn(rs.getString("nisn"));
-        siswa.setNama(rs.getString("nama_siswa"));
-        siswa.setJurusan(rs.getString("jurusan"));
-        siswa.setKelas(rs.getString("kelas"));
-        siswa.setTahunLulus(rs.getInt("tahun_lulus"));
+        Kandidat kandidat = new Kandidat();
+        kandidat.setIdKandidat(rs.getInt("id_kandidat"));
+        kandidat.setNisn(rs.getString("nisn"));
+        kandidat.setNama(rs.getString("nama_kandidat"));
+        kandidat.setTahunLulus(rs.getInt("tahun_lulus"));
 
         Perusahaan perusahaan = new Perusahaan();
         perusahaan.setIdPerusahaan(rs.getInt("id_perusahaan"));
@@ -139,7 +137,7 @@ public class HasilGapDAO {
 
         HasilGap hasilGap = new HasilGap();
         hasilGap.setIdHasilGap(rs.getInt("id_hasil_gap"));
-        hasilGap.setSiswa(siswa);
+        hasilGap.setKandidat(kandidat);
         hasilGap.setLowongan(lowongan);
         hasilGap.setKriteria(kriteria);
         hasilGap.setNilaiGap(rs.getInt("nilai_gap"));

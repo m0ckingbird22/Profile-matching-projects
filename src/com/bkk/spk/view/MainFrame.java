@@ -3,13 +3,11 @@ package com.bkk.spk.view;
 import com.bkk.spk.model.Admin;
 import com.bkk.spk.util.Session;
 import com.bkk.spk.view.panel.DashboardPanel;
-import com.bkk.spk.view.panel.SiswaPanel;
-import com.bkk.spk.view.panel.PerusahaanPanel;
-import com.bkk.spk.view.panel.LowonganPanel;
-import com.bkk.spk.view.panel.KriteriaPanel;
-import com.bkk.spk.view.panel.ProfilIdealPanel;
+import com.bkk.spk.view.panel.KandidatPanel;
+import com.bkk.spk.view.panel.PerusahaanLowonganPanel;
+import com.bkk.spk.view.panel.KriteriaProfilIdealPanel;
 import com.bkk.spk.view.panel.InputNilaiPanel;
-import com.bkk.spk.view.panel.ProsesSeleksiPanel;
+import com.bkk.spk.view.panel.ProsesPerhitunganPanel;
 import com.bkk.spk.view.panel.LaporanHasilPanel;
 
 import javax.swing.BorderFactory;
@@ -130,13 +128,11 @@ public class MainFrame extends javax.swing.JFrame implements Navigator {
 
         // Menu utama
         sidebar.add(menuButton("Dashboard", DASHBOARD));
-        sidebar.add(menuButton("Data Siswa", SISWA));
-        sidebar.add(menuButton("Data Perusahaan", PERUSAHAAN));
-        sidebar.add(menuButton("Data Lowongan", LOWONGAN));
+        sidebar.add(menuButton("Data Kandidat", KANDIDAT));
+        sidebar.add(menuButton("Data Perusahaan", PERUSAHAAN_LOWONGAN));
         sidebar.add(menuButton("Data Kriteria", KRITERIA));
-        sidebar.add(menuButton("Profil Ideal", PROFIL_IDEAL));
-        sidebar.add(menuButton("Input Nilai Siswa", INPUT_NILAI));
-        sidebar.add(menuButton("Proses Seleksi", PROSES_SELEKSI));
+        sidebar.add(menuButton("Data Nilai Kandidat", INPUT_NILAI));
+        sidebar.add(menuButton("Proses Perhitungan", PROSES_PERHITUNGAN));
         sidebar.add(menuButton("Laporan Hasil", LAPORAN_HASIL));
 
         // Dorong tombol logout ke bawah
@@ -169,13 +165,11 @@ public class MainFrame extends javax.swing.JFrame implements Navigator {
         // Daftarin SEMUA card di awal biar show() gak error.
         // Card yang belum ada panel-nya pakai placeholder dulu.
         cardPanel.add(new DashboardPanel(), DASHBOARD);
-        cardPanel.add(new SiswaPanel(), SISWA);
-        cardPanel.add(new PerusahaanPanel(), PERUSAHAAN);
-        cardPanel.add(new LowonganPanel(), LOWONGAN);
-        cardPanel.add(new KriteriaPanel(), KRITERIA);
-        cardPanel.add(new ProfilIdealPanel(), PROFIL_IDEAL);
+        cardPanel.add(new KandidatPanel(), KANDIDAT);
+        cardPanel.add(new PerusahaanLowonganPanel(), PERUSAHAAN_LOWONGAN);
+        cardPanel.add(new KriteriaProfilIdealPanel(), KRITERIA);
         cardPanel.add(new InputNilaiPanel(), INPUT_NILAI);
-        cardPanel.add(new ProsesSeleksiPanel(), PROSES_SELEKSI);
+        cardPanel.add(new ProsesPerhitunganPanel(), PROSES_PERHITUNGAN);
         cardPanel.add(new LaporanHasilPanel(), LAPORAN_HASIL);
 
         return cardPanel;
@@ -265,13 +259,11 @@ public class MainFrame extends javax.swing.JFrame implements Navigator {
     private String prettyTitle(String cardName) {
         switch (cardName) {
             case DASHBOARD: return "Dashboard";
-            case SISWA: return "Data Siswa";
-            case PERUSAHAAN: return "Data Perusahaan";
-            case LOWONGAN: return "Data Lowongan";
+            case KANDIDAT: return "Data Kandidat";
+            case PERUSAHAAN_LOWONGAN: return "Data Perusahaan";
             case KRITERIA: return "Data Kriteria";
-            case PROFIL_IDEAL: return "Profil Ideal Lowongan";
-            case INPUT_NILAI: return "Input Nilai Siswa";
-            case PROSES_SELEKSI: return "Proses Seleksi";
+            case INPUT_NILAI: return "Data Nilai Kandidat";
+            case PROSES_PERHITUNGAN: return "Proses Perhitungan";
             case LAPORAN_HASIL: return "Laporan Hasil";
             default: return "SPK Profile Matching";
         }

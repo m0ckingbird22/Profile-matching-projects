@@ -3,41 +3,50 @@ package com.bkk.spk.view.panel;
 import com.bkk.spk.dao.HasilAkhirDAO;
 import com.bkk.spk.dao.HasilGapDAO;
 import com.bkk.spk.dao.LowonganDAO;
-import com.bkk.spk.dao.NilaiSiswaDAO;
+import com.bkk.spk.dao.NilaiKandidatDAO;
 import com.bkk.spk.dao.ProfilIdealDAO;
 import com.bkk.spk.model.HasilAkhir;
 import com.bkk.spk.model.HasilGap;
 import com.bkk.spk.model.Lowongan;
-import com.bkk.spk.model.NilaiSiswa;
+import com.bkk.spk.model.NilaiKandidat;
 import com.bkk.spk.model.ProfilIdeal;
+import com.bkk.spk.service.LaporanPdfExporter;
 import com.bkk.spk.view.util.ButtonStyle;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.io.File;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Panel laporan hasil seleksi: pilih lowongan → lihat ranking lengkap,
- * klik baris siswa → lihat detail perhitungan (Nilai, Target, GAP, Bobot) per kriteria
+ * klik baris kandidat → lihat detail perhitungan (Nilai, Target, GAP, Bobot) per kriteria
  * + label formula NCF/NSF/Nilai Akhir yang dihitung step-by-step.
  */
 public class LaporanHasilPanel extends JPanel {
 
     private static final String[] RANK_COLUMNS = {
-        "Rank", "NISN", "Nama", "Jurusan", "Kelas", "NCF", "NSF", "Total", "Status"
+        "Rank", "NISN", "Nama", "NCF", "NSF", "Total", "Status"
     };
     private static final String[] GAP_COLUMNS = {
         "Kode", "Nama Kriteria", "Jenis", "Nilai", "Target", "GAP", "Bobot"
@@ -46,7 +55,7 @@ public class LaporanHasilPanel extends JPanel {
     private final LowonganDAO lowonganDAO = new LowonganDAO();
     private final HasilAkhirDAO hasilAkhirDAO = new HasilAkhirDAO();
     private final HasilGapDAO hasilGapDAO = new HasilGapDAO();
-    private final NilaiSiswaDAO nilaiSiswaDAO = new NilaiSiswaDAO();
+    private final NilaiKandidatDAO nilaiKandidatDAO = new NilaiKandidatDAO();
     private final ProfilIdealDAO profilIdealDAO = new ProfilIdealDAO();
 
     private final JComboBox<Lowongan> cbLowongan = new JComboBox<>();
@@ -92,7 +101,7 @@ public class LaporanHasilPanel extends JPanel {
         JScrollPane scrollRank = new JScrollPane(rankTable);
         scrollRank.setBorder(BorderFactory.createTitledBorder("Ranking Kandidat"));
         scrollGap = new JScrollPane(gapTable);
-        scrollGap.setBorder(BorderFactory.createTitledBorder("Detail Perhitungan (klik baris siswa di atas)"));
+        scrollGap.setBorder(BorderFactory.createTitledBorder("Detail Perhitungan (klik baris kandidat di atas)"));
 
         JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, scrollRank, scrollGap);
         split.setDividerLocation(320);
@@ -149,8 +158,91 @@ public class LaporanHasilPanel extends JPanel {
         });
         right.add(btnRefresh);
 
+        JButton btnCetakPdf = new JButton("Cetak PDF");
+        ButtonStyle.primary(btnCetakPdf);
+        btnCetakPdf.addActionListener(e -> onCetakPdf());
+        right.add(btnCetakPdf);
+
         toolbar.add(right, BorderLayout.EAST);
         return toolbar;
+    }
+
+    private void onCetakPdf() {
+        Lowongan selected = (Lowongan) cbLowongan.getSelectedItem();
+        if (selected == null) {
+            JOptionPane.showMessageDialog(this, "Pilih lowongan dulu sebelum cetak PDF.",
+                "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        List<HasilAkhir> hasil = hasilAkhirDAO.getByLowongan(selected.getIdLowongan());
+        if (hasil.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Belum ada hasil perhitungan untuk lowongan ini.\nJalankan Proses Perhitungan dulu.",
+                "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String namaBersih = selected.getPosisi()
+            .replaceAll("[^a-zA-Z0-9-_]", "_");
+        String tgl = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String namaFileDefault = "Laporan_Hasil_" + namaBersih + "_" + tgl + ".pdf";
+
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Simpan Laporan PDF");
+        fc.setSelectedFile(new File(namaFileDefault));
+        fc.setFileFilter(new FileNameExtensionFilter("PDF (*.pdf)", "pdf"));
+        int ret = fc.showSaveDialog(this);
+        if (ret != JFileChooser.APPROVE_OPTION) return;
+
+        File file = fc.getSelectedFile();
+        if (!file.getName().toLowerCase().endsWith(".pdf")) {
+            file = new File(file.getParentFile(), file.getName() + ".pdf");
+        }
+        if (file.exists()) {
+            int ovw = JOptionPane.showConfirmDialog(this,
+                "File sudah ada. Timpa?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+            if (ovw != JOptionPane.YES_OPTION) return;
+        }
+
+        final File target = file;
+        setEnabledAll(false);
+        new Thread(() -> {
+            try {
+                long t0 = System.currentTimeMillis();
+                new LaporanPdfExporter().export(target, selected);
+                long ms = System.currentTimeMillis() - t0;
+                SwingUtilities.invokeLater(() -> {
+                    setEnabledAll(true);
+                    int buka = JOptionPane.showConfirmDialog(this,
+                        "PDF berhasil dibuat (" + ms + " ms):\n" + target.getAbsolutePath() +
+                            "\n\nBuka sekarang?",
+                        "Sukses", JOptionPane.YES_NO_OPTION);
+                    if (buka == JOptionPane.YES_OPTION && Desktop.isDesktopSupported()) {
+                        try { Desktop.getDesktop().open(target); }
+                        catch (Exception ex) { ex.printStackTrace(); }
+                    }
+                });
+            } catch (Exception ex) {
+                SwingUtilities.invokeLater(() -> {
+                    setEnabledAll(true);
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this,
+                        "Gagal membuat PDF:\n" + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                });
+            }
+        }, "pdf-export").start();
+    }
+
+    private void setEnabledAll(boolean enabled) {
+        cbLowongan.setEnabled(enabled);
+        for (java.awt.Component c : getComponents()) {
+            if (c instanceof JPanel) {
+                for (java.awt.Component child : ((JPanel) c).getComponents()) {
+                    if (child instanceof JButton) child.setEnabled(enabled);
+                }
+            }
+        }
     }
 
     private void muatLowongan() {
@@ -185,10 +277,8 @@ public class LaporanHasilPanel extends JPanel {
             if (status.equals("LULUS")) lulus++;
             rankModel.addRow(new Object[]{
                 h.getRanking(),
-                h.getSiswa().getNisn(),
-                h.getSiswa().getNama(),
-                h.getSiswa().getJurusan(),
-                h.getSiswa().getKelas(),
+                h.getKandidat().getNisn(),
+                h.getKandidat().getNama(),
                 String.format("%.3f", h.getNcf()),
                 String.format("%.3f", h.getNsf()),
                 String.format("%.3f", h.getNilaiTotal()),
@@ -215,7 +305,7 @@ public class LaporanHasilPanel extends JPanel {
 
         List<HasilAkhir> hasil = hasilAkhirDAO.getByLowongan(selected.getIdLowongan());
         for (HasilAkhir h : hasil) {
-            if (h.getRanking() == rank && h.getSiswa().getNisn().equals(nisn)) {
+            if (h.getRanking() == rank && h.getKandidat().getNisn().equals(nisn)) {
                 tampilkanDetailPerhitungan(h, selected);
                 break;
             }
@@ -224,12 +314,12 @@ public class LaporanHasilPanel extends JPanel {
 
     /** Isi tabel bawah dengan Nilai/Target/GAP/Bobot per kriteria + update label formula. */
     private void tampilkanDetailPerhitungan(HasilAkhir h, Lowongan selected) {
-        int idSiswa = h.getSiswa().getIdSiswa();
+        int idKandidat = h.getKandidat().getIdKandidat();
         int idLowongan = selected.getIdLowongan();
 
-        // Map nilai siswa & target per kriteria (lookup cepat)
+        // Map nilai kandidat & target per kriteria (lookup cepat)
         Map<Integer, Double> mapNilai = new HashMap<>();
-        for (NilaiSiswa n : nilaiSiswaDAO.getBySiswa(idSiswa)) {
+        for (NilaiKandidat n : nilaiKandidatDAO.getByKandidat(idKandidat)) {
             mapNilai.put(n.getKriteria().getIdKriteria(), n.getNilaiKandidat());
         }
         Map<Integer, Double> mapTarget = new HashMap<>();
@@ -237,7 +327,7 @@ public class LaporanHasilPanel extends JPanel {
             mapTarget.put(p.getKriteria().getIdKriteria(), p.getNilaiTarget());
         }
 
-        List<HasilGap> gaps = hasilGapDAO.getBySiswaDanLowongan(idSiswa, idLowongan);
+        List<HasilGap> gaps = hasilGapDAO.getByKandidatDanLowongan(idKandidat, idLowongan);
 
         // Bangun string formula sekaligus isi tabel
         StringBuilder sbCF = new StringBuilder("(");
@@ -274,8 +364,8 @@ public class LaporanHasilPanel extends JPanel {
         sbCF.append(") / ").append(countCF).append(" = ").append(String.format("%.3f", h.getNcf()));
         sbSF.append(") / ").append(countSF).append(" = ").append(String.format("%.3f", h.getNsf()));
 
-        // Update border title tabel bawah dengan info siswa
-        updateGapBorder(h.getSiswa().getNama() + " (" + h.getSiswa().getJurusan() + ")", h.getRanking());
+        // Update border title tabel bawah dengan info kandidat
+        updateGapBorder(h.getKandidat().getNama(), h.getRanking());
 
         // Hitung ulang nilai akhir untuk demonstrasi formula
         double ncf = h.getNcf();
@@ -302,10 +392,10 @@ public class LaporanHasilPanel extends JPanel {
         lblFormula.setText(html);
     }
 
-    private void updateGapBorder(String infoSiswa, int rank) {
-        String title = (infoSiswa == null)
-            ? "Detail Perhitungan (klik baris siswa di atas)"
-            : "Detail Perhitungan: " + infoSiswa + " — Rank #" + rank;
+    private void updateGapBorder(String infoKandidat, int rank) {
+        String title = (infoKandidat == null)
+            ? "Detail Perhitungan (klik baris kandidat di atas)"
+            : "Detail Perhitungan: " + infoKandidat + " — Rank #" + rank;
         javax.swing.border.Border current = scrollGap.getBorder();
         if (current instanceof javax.swing.border.TitledBorder) {
             ((javax.swing.border.TitledBorder) current).setTitle(title);

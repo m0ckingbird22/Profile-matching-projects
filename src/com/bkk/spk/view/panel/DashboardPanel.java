@@ -1,9 +1,9 @@
 package com.bkk.spk.view.panel;
 
+import com.bkk.spk.dao.KandidatDAO;
 import com.bkk.spk.dao.KriteriaDAO;
 import com.bkk.spk.dao.LowonganDAO;
 import com.bkk.spk.dao.PerusahaanDAO;
-import com.bkk.spk.dao.SiswaDAO;
 import com.bkk.spk.model.Admin;
 import com.bkk.spk.util.Session;
 import com.bkk.spk.view.util.ButtonStyle;
@@ -30,7 +30,7 @@ import java.awt.RenderingHints;
 import java.net.URL;
 
 /**
- * Dashboard landing page: greeting + kartu statistik (Total Siswa, Perusahaan,
+ * Dashboard landing page: greeting + kartu statistik (Total Kandidat, Perusahaan,
  * Lowongan BUKA, Kriteria) + tombol Refresh.
  *
  * Statistik dimuat di muatStatistik() — panggil saat panel tampil kalau mau
@@ -40,12 +40,12 @@ public class DashboardPanel extends JPanel {
 
     private static final int LOGO_SIZE = 60;
 
-    private final SiswaDAO siswaDAO = new SiswaDAO();
+    private final KandidatDAO kandidatDAO = new KandidatDAO();
     private final PerusahaanDAO perusahaanDAO = new PerusahaanDAO();
     private final LowonganDAO lowonganDAO = new LowonganDAO();
     private final KriteriaDAO kriteriaDAO = new KriteriaDAO();
 
-    private final JLabel lblTotalSiswa = new JLabel("0");
+    private final JLabel lblTotalKandidat = new JLabel("0");
     private final JLabel lblTotalPerusahaan = new JLabel("0");
     private final JLabel lblLowonganBuka = new JLabel("0");
     private final JLabel lblTotalKriteria = new JLabel("0");
@@ -94,7 +94,7 @@ public class DashboardPanel extends JPanel {
 
         JPanel grid = new JPanel(new GridLayout(2, 2, 12, 12));
         grid.setOpaque(false);
-        grid.add(buatKartu("Total Siswa", lblTotalSiswa, "Seluruh kandidat terdaftar"));
+        grid.add(buatKartu("Total Kandidat", lblTotalKandidat, "Seluruh kandidat terdaftar"));
         grid.add(buatKartu("Lowongan Aktif", lblLowonganBuka, "Status BUKA (siap seleksi)"));
         grid.add(buatKartu("Perusahaan", lblTotalPerusahaan, "Mitra BKK"));
         grid.add(buatKartu("Kriteria", lblTotalKriteria, "CF + SF"));
@@ -178,13 +178,13 @@ public class DashboardPanel extends JPanel {
     /** Hitung ulang angka di kartu. Dioptimasi: query count ringan, gak baca seluruh tabel. */
     private void muatStatistik() {
         new Thread(() -> {
-            int siswa = siswaDAO.getAll().size();
+            int kandidat = kandidatDAO.getAll().size();
             int perusahaan = perusahaanDAO.getAll().size();
             int lowonganBuka = lowonganDAO.getAllBuka().size();
             int kriteria = kriteriaDAO.getAll().size();
 
             SwingUtilities.invokeLater(() -> {
-                lblTotalSiswa.setText(String.valueOf(siswa));
+                lblTotalKandidat.setText(String.valueOf(kandidat));
                 lblTotalPerusahaan.setText(String.valueOf(perusahaan));
                 lblLowonganBuka.setText(String.valueOf(lowonganBuka));
                 lblTotalKriteria.setText(String.valueOf(kriteria));

@@ -17,7 +17,7 @@ import java.util.Map;
 public class BobotGapDAO {
 
     // Ambil semua mapping gap->bobot sekaligus jadi Map, biar ProfileMatchingService
-    // gak perlu query berulang-ulang ke database untuk tiap kriteria/siswa (mahal secara performance).
+    // gak perlu query berulang-ulang ke database untuk tiap kriteria/kandidat (mahal secara performance).
     public Map<Integer, Double> getAllAsMap() {
         Map<Integer, Double> mapBobot = new HashMap<>();
         String sql = "SELECT selisih_gap, bobot_nilai FROM tb_bobot_gap";

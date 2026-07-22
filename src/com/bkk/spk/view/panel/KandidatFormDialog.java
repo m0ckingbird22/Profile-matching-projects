@@ -1,8 +1,8 @@
 package com.bkk.spk.view.panel;
 
 import com.bkk.spk.dao.KriteriaDAO;
+import com.bkk.spk.model.Kandidat;
 import com.bkk.spk.model.Kriteria;
-import com.bkk.spk.model.Siswa;
 import com.bkk.spk.view.util.ButtonStyle;
 
 import javax.swing.BorderFactory;
@@ -31,24 +31,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Dialog modal untuk Tambah atau Edit data Siswa.
+ * Dialog modal untuk Tambah atau Edit data Kandidat.
  *
- * Mode Tambah (initial == null): menampilkan section tambahan "Nilai Siswa per
- * Kriteria" (combo 1-5 per kriteria) supaya user bisa langsung masukin nilai
- * target saat bikin siswa baru — gak perlu lagi buat siswa dulu terus jebol ke
- * menu Input Nilai. Setelah Simpan, caller dapetin HasilForm.nilaiByKriteria
- * untuk di-insertBatch ke tb_nilai_siswa.
+ * Mode Tambah (initial == null): menampilkan section tambahan "Nilai Kandidat
+ * per Kriteria" (combo 1-5 per kriteria) supaya user bisa langsung masukin nilai
+ * target saat bikin kandidat baru. Setelah Simpan, caller dapetin
+ * HasilForm.nilaiByKriteria untuk di-insertBatch ke tb_nilai_kandidat.
  *
- * Mode Edit (initial != null): hanya form data siswa — nilai diedit lewat menu
+ * Mode Edit (initial != null): hanya form data kandidat — nilai diedit lewat menu
  * Input Nilai supaya tidak ada dua jalan Ubah nilai yang bisa bikin bingung.
- *
- * Pola pemakaian:
- *   HasilForm h = SiswaFormDialog.tampilkan(parent, "Tambah Siswa", null);
- *   if (h != null) { ... h.siswa ... h.nilaiByKriteria ... }
  */
-public class SiswaFormDialog extends JDialog {
+public class KandidatFormDialog extends JDialog {
 
-    private static final String[] JURUSAN_OPTIONS = {"RPL", "TKJ", "MM", "AKL", "TKR", "TBSM"};
     private static final String[] NILAI_OPTIONS = {"1", "2", "3", "4", "5"};
     private static final DateTimeFormatter FMT_TGL = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
@@ -60,16 +54,14 @@ public class SiswaFormDialog extends JDialog {
     private final JTextField txtTanggalLahir = new JTextField();
     private final JTextArea txtAlamat = new JTextArea(2, 20);
     private final JTextField txtLinkCv = new JTextField();
-    private final JComboBox<String> cbJurusan = new JComboBox<>(JURUSAN_OPTIONS);
-    private final JTextField txtKelas = new JTextField();
     private final JTextField txtTahunLulus = new JTextField();
 
-    private final Siswa initial;
-    private Siswa hasilSiswa;
+    private final Kandidat initial;
+    private Kandidat hasilKandidat;
     private final Map<Integer, Integer> hasilNilai = new LinkedHashMap<>();
     private boolean saved = false;
 
-    public SiswaFormDialog(Frame owner, String title, Siswa initial) {
+    public KandidatFormDialog(Frame owner, String title, Kandidat initial) {
         super(owner, title, true);
         this.initial = initial;
         initComponents();
@@ -84,22 +76,22 @@ public class SiswaFormDialog extends JDialog {
         JPanel root = new JPanel(new BorderLayout(0, 12));
         root.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        root.add(buildSiswaPanel(), BorderLayout.NORTH);
+        root.add(buildKandidatPanel(), BorderLayout.NORTH);
 
         if (initial == null) {
             root.add(buildNilaiPanel(), BorderLayout.CENTER);
-            setSize(540, 760);
+            setSize(540, 700);
         } else {
-            setSize(540, 500);
+            setSize(540, 460);
         }
 
         root.add(buildButtonPanel(), BorderLayout.SOUTH);
         setContentPane(root);
     }
 
-    private JPanel buildSiswaPanel() {
+    private JPanel buildKandidatPanel() {
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBorder(BorderFactory.createTitledBorder("Data Siswa"));
+        form.setBorder(BorderFactory.createTitledBorder("Data Kandidat"));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(6, 6, 6, 6);
@@ -110,14 +102,12 @@ public class SiswaFormDialog extends JDialog {
         JScrollPane scrollAlamat = new JScrollPane(txtAlamat);
         scrollAlamat.setPreferredSize(new java.awt.Dimension(320, 50));
 
-        addRow(form, gbc, 0, "NISN", txtNisn);
+        addRow(form, gbc, 0, "Kode", txtNisn);
         addRow(form, gbc, 1, "Nama", txtNama);
         addRow(form, gbc, 2, "Tgl Lahir", txtTanggalLahir);
         addRow(form, gbc, 3, "Alamat", scrollAlamat);
         addRow(form, gbc, 4, "Link CV", txtLinkCv);
-        addRow(form, gbc, 5, "Jurusan", cbJurusan);
-        addRow(form, gbc, 6, "Kelas", txtKelas);
-        addRow(form, gbc, 7, "Tahun Lulus", txtTahunLulus);
+        addRow(form, gbc, 5, "Tahun Lulus", txtTahunLulus);
 
         txtTahunLulus.setPreferredSize(new java.awt.Dimension(120, 24));
         txtTanggalLahir.setPreferredSize(new java.awt.Dimension(150, 24));
@@ -127,24 +117,36 @@ public class SiswaFormDialog extends JDialog {
     }
 
     private JPanel buildNilaiPanel() {
+        // Wrapper (BorderLayout) -> header label di NORTH + grid panel di CENTER.
+        // Header dipisah dari grid supaya gak nabrak dengan row pertama (C1 - ...).
+        JPanel wrapper = new JPanel(new BorderLayout(0, 8));
+
+        JLabel sectionTitle = new JLabel("Nilai Kandidat per Kriteria (skala 1-5)");
+        sectionTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        sectionTitle.setBorder(BorderFactory.createEmptyBorder(2, 4, 0, 0));
+        wrapper.add(sectionTitle, BorderLayout.NORTH);
+
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Nilai Siswa per Kriteria (skala 1-5)"));
+        panel.setBorder(BorderFactory.createLineBorder(new java.awt.Color(0xF8, 0xBB, 0xD0), 1));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 6, 4, 6);
         gbc.anchor = GridBagConstraints.WEST;
 
         List<Kriteria> daftar = kriteriaDAO.getAll();
         if (daftar.isEmpty()) {
             gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2; gbc.weightx = 1.0;
+            gbc.insets = new Insets(10, 10, 10, 10);
             JLabel kosong = new JLabel("(Belum ada kriteria di DB — buka menu Kriteria dulu.)");
             kosong.setFont(new Font("Segoe UI", Font.ITALIC, 12));
             panel.add(kosong, gbc);
-            return panel;
+            wrapper.add(panel, BorderLayout.CENTER);
+            return wrapper;
         }
 
         int row = 0;
         for (Kriteria k : daftar) {
+            gbc.insets = new Insets(6, 10, 6, 10);
+
             String label = k.getKodeKriteria() + " - " + k.getNamaKriteria() + "  [" + k.getJenisFaktor() + "]";
             JLabel lbl = new JLabel(label);
             lbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -164,7 +166,8 @@ public class SiswaFormDialog extends JDialog {
             comboByKriteriaId.put(k.getIdKriteria(), cb);
             row++;
         }
-        return panel;
+        wrapper.add(panel, BorderLayout.CENTER);
+        return wrapper;
     }
 
     private JPanel buildButtonPanel() {
@@ -207,8 +210,6 @@ public class SiswaFormDialog extends JDialog {
         }
         txtAlamat.setText(initial.getAlamat());
         txtLinkCv.setText(initial.getLinkCv());
-        cbJurusan.setSelectedItem(initial.getJurusan());
-        txtKelas.setText(initial.getKelas());
         txtTahunLulus.setText(String.valueOf(initial.getTahunLulus()));
     }
 
@@ -218,12 +219,10 @@ public class SiswaFormDialog extends JDialog {
         String tglStr = txtTanggalLahir.getText().trim();
         String alamat = txtAlamat.getText().trim();
         String linkCv = txtLinkCv.getText().trim();
-        String jurusan = (String) cbJurusan.getSelectedItem();
-        String kelas = txtKelas.getText().trim();
         String tahunStr = txtTahunLulus.getText().trim();
 
         if (nisn.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "NISN tidak boleh kosong.", "Validasi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Kode tidak boleh kosong.", "Validasi", JOptionPane.WARNING_MESSAGE);
             txtNisn.requestFocusInWindow();
             return;
         }
@@ -264,15 +263,13 @@ public class SiswaFormDialog extends JDialog {
             return;
         }
 
-        hasilSiswa = (initial == null) ? new Siswa() : initial;
-        hasilSiswa.setNisn(nisn);
-        hasilSiswa.setNama(nama);
-        hasilSiswa.setTanggalLahir(tanggalLahir);
-        hasilSiswa.setAlamat(alamat);
-        hasilSiswa.setLinkCv(linkCv);
-        hasilSiswa.setJurusan(jurusan);
-        hasilSiswa.setKelas(kelas);
-        hasilSiswa.setTahunLulus(tahun);
+        hasilKandidat = (initial == null) ? new Kandidat() : initial;
+        hasilKandidat.setNisn(nisn);
+        hasilKandidat.setNama(nama);
+        hasilKandidat.setTanggalLahir(tanggalLahir);
+        hasilKandidat.setAlamat(alamat);
+        hasilKandidat.setLinkCv(linkCv);
+        hasilKandidat.setTahunLulus(tahun);
 
         hasilNilai.clear();
         for (Map.Entry<Integer, JComboBox<String>> e : comboByKriteriaId.entrySet()) {
@@ -285,34 +282,34 @@ public class SiswaFormDialog extends JDialog {
     }
 
     public boolean isSaved() { return saved; }
-    public Siswa getHasilSiswa() { return hasilSiswa; }
+    public Kandidat getHasilKandidat() { return hasilKandidat; }
     public Map<Integer, Integer> getHasilNilai() { return hasilNilai; }
 
     /**
-     * Hasil dialog Tambah/Edit: siswa + map nilai per kriteria (kosong di mode Edit
-     * / kalau tidak ada kriteria). Dipake caller untuk insert siswa + batch nilai.
+     * Hasil dialog Tambah/Edit: kandidat + map nilai per kriteria (kosong di mode
+     * Edit / kalau tidak ada kriteria). Dipake caller untuk insert kandidat + batch nilai.
      */
     public static class HasilForm {
-        private final Siswa siswa;
+        private final Kandidat kandidat;
         private final Map<Integer, Integer> nilaiByKriteria;
 
-        public HasilForm(Siswa siswa, Map<Integer, Integer> nilaiByKriteria) {
-            this.siswa = siswa;
+        public HasilForm(Kandidat kandidat, Map<Integer, Integer> nilaiByKriteria) {
+            this.kandidat = kandidat;
             this.nilaiByKriteria = nilaiByKriteria;
         }
-        public Siswa getSiswa() { return siswa; }
+        public Kandidat getKandidat() { return kandidat; }
         public Map<Integer, Integer> getNilaiByKriteria() { return nilaiByKriteria; }
     }
 
-    /** Tampilkan dialog modal. Return HasilForm (siswa + nilai) atau null bila batal. */
-    public static HasilForm tampilkan(Frame owner, String title, Siswa initial) {
-        SiswaFormDialog dlg = new SiswaFormDialog(owner, title, initial);
+    /** Tampilkan dialog modal. Return HasilForm (kandidat + nilai) atau null bila batal. */
+    public static HasilForm tampilkan(Frame owner, String title, Kandidat initial) {
+        KandidatFormDialog dlg = new KandidatFormDialog(owner, title, initial);
         dlg.setVisible(true);
-        return dlg.saved ? new HasilForm(dlg.hasilSiswa, dlg.hasilNilai) : null;
+        return dlg.saved ? new HasilForm(dlg.hasilKandidat, dlg.hasilNilai) : null;
     }
 
     /** Overload dari komponen Swing manapun — cari root Window-nya otomatis. */
-    public static HasilForm tampilkan(java.awt.Component parent, String title, Siswa initial) {
+    public static HasilForm tampilkan(java.awt.Component parent, String title, Kandidat initial) {
         Frame owner = (Frame) SwingUtilities.getWindowAncestor(parent);
         return tampilkan(owner, title, initial);
     }

@@ -2,7 +2,7 @@ package com.bkk.spk.model;
 
 public class HasilGap {
     private int idHasilGap;
-    private Siswa siswa;
+    private Kandidat kandidat;
     private Lowongan lowongan;
     private Kriteria kriteria;
     private int nilaiGap;       // nilai_kandidat - nilai_target
@@ -10,8 +10,8 @@ public class HasilGap {
 
     public HasilGap() {}
 
-    public HasilGap(Siswa siswa, Lowongan lowongan, Kriteria kriteria, int nilaiGap, double bobotNilai) {
-        this.siswa = siswa;
+    public HasilGap(Kandidat kandidat, Lowongan lowongan, Kriteria kriteria, int nilaiGap, double bobotNilai) {
+        this.kandidat = kandidat;
         this.lowongan = lowongan;
         this.kriteria = kriteria;
         this.nilaiGap = nilaiGap;
@@ -21,8 +21,8 @@ public class HasilGap {
     public int getIdHasilGap() { return idHasilGap; }
     public void setIdHasilGap(int idHasilGap) { this.idHasilGap = idHasilGap; }
 
-    public Siswa getSiswa() { return siswa; }
-    public void setSiswa(Siswa siswa) { this.siswa = siswa; }
+    public Kandidat getKandidat() { return kandidat; }
+    public void setKandidat(Kandidat kandidat) { this.kandidat = kandidat; }
 
     public Lowongan getLowongan() { return lowongan; }
     public void setLowongan(Lowongan lowongan) { this.lowongan = lowongan; }

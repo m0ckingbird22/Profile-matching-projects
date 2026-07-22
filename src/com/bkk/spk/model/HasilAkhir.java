@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public class HasilAkhir {
     private int idHasilAkhir;
-    private Siswa siswa;
+    private Kandidat kandidat;
     private Lowongan lowongan;
     private Admin admin;
     private double ncf;         // Nilai rata-rata Core Factor
@@ -15,8 +15,8 @@ public class HasilAkhir {
 
     public HasilAkhir() {}
 
-    public HasilAkhir(Siswa siswa, Lowongan lowongan, Admin admin, double ncf, double nsf, double nilaiTotal) {
-        this.siswa = siswa;
+    public HasilAkhir(Kandidat kandidat, Lowongan lowongan, Admin admin, double ncf, double nsf, double nilaiTotal) {
+        this.kandidat = kandidat;
         this.lowongan = lowongan;
         this.admin = admin;
         this.ncf = ncf;
@@ -27,8 +27,8 @@ public class HasilAkhir {
     public int getIdHasilAkhir() { return idHasilAkhir; }
     public void setIdHasilAkhir(int idHasilAkhir) { this.idHasilAkhir = idHasilAkhir; }
 
-    public Siswa getSiswa() { return siswa; }
-    public void setSiswa(Siswa siswa) { this.siswa = siswa; }
+    public Kandidat getKandidat() { return kandidat; }
+    public void setKandidat(Kandidat kandidat) { this.kandidat = kandidat; }
 
     public Lowongan getLowongan() { return lowongan; }
     public void setLowongan(Lowongan lowongan) { this.lowongan = lowongan; }

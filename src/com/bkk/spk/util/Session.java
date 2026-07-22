@@ -5,7 +5,7 @@ import com.bkk.spk.model.Admin;
 /**
  * State global buat simpan admin yang lagi login.
  * Diisi saat LoginDialog sukses, dibersihkan saat logout.
- * Dipakai terutama oleh ProsesSeleksiPanel untuk audit id_admin di tb_hasil_akhir.
+ * Dipakai terutama oleh ProsesPerhitunganPanel untuk audit id_admin di tb_hasil_akhir.
  */
 public final class Session {
 

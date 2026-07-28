@@ -6,6 +6,7 @@ import com.bkk.spk.model.Kandidat;
 import com.bkk.spk.model.Kriteria;
 import com.bkk.spk.model.NilaiKandidat;
 import com.bkk.spk.view.util.ButtonStyle;
+import com.bkk.spk.view.util.ZebraTableRenderer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -17,12 +18,16 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +40,18 @@ import java.util.Map;
 public class KandidatPanel extends JPanel {
 
     private static final String[] COLUMNS = {"ID", "Kode", "Nama", "Th. Lulus", "Tgl Lahir", "Alamat"};
+
+    /** Alignment per kolom (index mengikuti COLUMNS). */
+    private static final int[] COL_ALIGN = {
+        SwingConstants.LEFT,    // 0 ID (hidden)
+        SwingConstants.LEFT,    // 1 Kode
+        SwingConstants.LEFT,    // 2 Nama
+        SwingConstants.CENTER,  // 3 Th. Lulus
+        SwingConstants.CENTER,  // 4 Tgl Lahir
+        SwingConstants.CENTER   // 5 Alamat
+    };
+
+    private static final DateTimeFormatter TGL_FMT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     private final KandidatDAO dao = new KandidatDAO();
     private final NilaiKandidatDAO nilaiDAO = new NilaiKandidatDAO();
@@ -58,23 +75,35 @@ public class KandidatPanel extends JPanel {
             }
         };
         table = new JTable(tableModel);
-        table.setRowHeight(26);
+        table.setRowHeight(29);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setReorderingAllowed(false);
         table.setAutoCreateRowSorter(false);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setShowGrid(true);
+        table.setGridColor(new java.awt.Color(0xF8, 0xBB, 0xD0));
+        table.setIntercellSpacing(new java.awt.Dimension(1, 1));
 
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
+        // Sort kolom Tgl Lahir (index 4) berbasis LocalDate — bukan string sort biasa,
+        // supaya 01-02-2000 gak ketemu lebih dulu dari 15-01-1999.
+        sorter.setComparator(4, new TglLahirComparator());
 
         // Hide kolom ID (kolom 0) — width 0
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
 
-        // Header styling
+        // Zebra-striping + alignment per kolom isi
+        for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i)
+                .setCellRenderer(new ZebraTableRenderer(COL_ALIGN[i]));
+        }
+        // Header: pink pastel, bold, alignment per kolom
+        ZebraTableRenderer.applyHeaderAlign(table, COL_ALIGN);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        table.getTableHeader().setBackground(new java.awt.Color(0xFC, 0xE4, 0xEC));
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.getTableHeader().setResizingAllowed(true);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(new java.awt.Color(0xF8, 0xBB, 0xD0)));
@@ -104,17 +133,24 @@ public class KandidatPanel extends JPanel {
         });
         right.add(txtCari);
 
-        right.add(button("Tambah", e -> onTambah()));
-        right.add(button("Edit", e -> onEdit()));
-        right.add(button("Hapus", e -> onHapus()));
-        right.add(button("Refresh", e -> refreshData()));
+        right.add(primary("Tambah", e -> onTambah()));
+        right.add(secondary("Edit", e -> onEdit()));
+        right.add(secondary("Hapus", e -> onHapus()));
+        right.add(secondary("Refresh", e -> refreshData()));
 
         toolbar.add(right, BorderLayout.EAST);
         return toolbar;
     }
 
-    private JButton button(String text, java.awt.event.ActionListener action) {
+    private JButton primary(String text, java.awt.event.ActionListener action) {
         return ButtonStyle.primary(text, action);
+    }
+
+    private JButton secondary(String text, java.awt.event.ActionListener action) {
+        JButton btn = new JButton(text);
+        ButtonStyle.secondary(btn);
+        btn.addActionListener(action);
+        return btn;
     }
 
     /** Reload tabel dari DB + re-apply filter saat ini. */
@@ -123,13 +159,12 @@ public class KandidatPanel extends JPanel {
         tableModel.setRowCount(0);
         List<Kandidat> daftar = dao.getAll();
         for (Kandidat k : daftar) {
-            java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy");
             tableModel.addRow(new Object[]{
                 k.getIdKandidat(),
                 k.getNisn(),
                 k.getNama(),
                 k.getTahunLulus(),
-                k.getTanggalLahir() != null ? k.getTanggalLahir().format(fmt) : "",
+                k.getTanggalLahir() != null ? k.getTanggalLahir().format(TGL_FMT) : "",
                 k.getAlamat() != null ? k.getAlamat() : ""
             });
         }
@@ -252,6 +287,30 @@ public class KandidatPanel extends JPanel {
                 table.setRowSelectionInterval(viewRow, viewRow);
                 break;
             }
+        }
+    }
+
+    /**
+     * Comparator untuk kolom Tgl Lahir (string "dd-MM-yyyy"). Parse ke LocalDate
+     * dulu lalu compare chronologically. String kosong / invalid didorong ke bawah.
+     */
+    private static class TglLahirComparator implements Comparator<Object> {
+        @Override
+        public int compare(Object a, Object b) {
+            LocalDate da = parse(a);
+            LocalDate db = parse(b);
+            if (da == null && db == null) return 0;
+            if (da == null) return 1;
+            if (db == null) return -1;
+            return da.compareTo(db);
+        }
+
+        private LocalDate parse(Object o) {
+            if (o == null) return null;
+            String s = o.toString().trim();
+            if (s.isEmpty()) return null;
+            try { return LocalDate.parse(s, TGL_FMT); }
+            catch (java.time.format.DateTimeParseException e) { return null; }
         }
     }
 }

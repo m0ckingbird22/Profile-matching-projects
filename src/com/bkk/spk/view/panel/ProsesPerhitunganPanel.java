@@ -7,6 +7,7 @@ import com.bkk.spk.model.Lowongan;
 import com.bkk.spk.service.ProfileMatchingService;
 import com.bkk.spk.util.Session;
 import com.bkk.spk.view.util.ButtonStyle;
+import com.bkk.spk.view.util.ZebraTableRenderer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -18,6 +19,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
@@ -41,6 +43,16 @@ public class ProsesPerhitunganPanel extends JPanel {
         "Rank", "NISN", "Nama", "NCF", "NSF", "Total", "Status"
     };
 
+    private static final int[] COL_ALIGN = {
+        SwingConstants.CENTER,  // Rank
+        SwingConstants.LEFT,    // NISN
+        SwingConstants.LEFT,    // Nama
+        SwingConstants.CENTER,  // NCF
+        SwingConstants.CENTER,  // NSF
+        SwingConstants.CENTER,  // Total
+        SwingConstants.CENTER   // Status
+    };
+
     private final LowonganDAO lowonganDAO = new LowonganDAO();
     private final ProfileMatchingService service = new ProfileMatchingService();
 
@@ -60,11 +72,11 @@ public class ProsesPerhitunganPanel extends JPanel {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         table = new JTable(tableModel);
-        table.setRowHeight(28);
+        table.setRowHeight(29);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setReorderingAllowed(false);
+        ZebraTableRenderer.apply(table, COL_ALIGN);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        table.getTableHeader().setBackground(new java.awt.Color(0xFC, 0xE4, 0xEC));
         table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
         JScrollPane scrollTable = new JScrollPane(table);

@@ -12,6 +12,7 @@ import com.bkk.spk.model.NilaiKandidat;
 import com.bkk.spk.model.ProfilIdeal;
 import com.bkk.spk.service.LaporanPdfExporter;
 import com.bkk.spk.view.util.ButtonStyle;
+import com.bkk.spk.view.util.ZebraTableRenderer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -24,6 +25,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
@@ -50,6 +52,25 @@ public class LaporanHasilPanel extends JPanel {
     };
     private static final String[] GAP_COLUMNS = {
         "Kode", "Nama Kriteria", "Jenis", "Nilai", "Target", "GAP", "Bobot"
+    };
+
+    private static final int[] RANK_ALIGN = {
+        SwingConstants.CENTER,  // Rank
+        SwingConstants.LEFT,    // NISN
+        SwingConstants.LEFT,    // Nama
+        SwingConstants.CENTER,  // NCF
+        SwingConstants.CENTER,  // NSF
+        SwingConstants.CENTER,  // Total
+        SwingConstants.CENTER   // Status
+    };
+    private static final int[] GAP_ALIGN = {
+        SwingConstants.LEFT,    // Kode
+        SwingConstants.LEFT,    // Nama Kriteria
+        SwingConstants.CENTER,  // Jenis
+        SwingConstants.CENTER,  // Nilai
+        SwingConstants.CENTER,  // Target
+        SwingConstants.CENTER,  // GAP
+        SwingConstants.CENTER   // Bobot
     };
 
     private final LowonganDAO lowonganDAO = new LowonganDAO();
@@ -79,11 +100,11 @@ public class LaporanHasilPanel extends JPanel {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         rankTable = new JTable(rankModel);
-        rankTable.setRowHeight(28);
+        rankTable.setRowHeight(29);
         rankTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         rankTable.getTableHeader().setReorderingAllowed(false);
+        ZebraTableRenderer.apply(rankTable, RANK_ALIGN);
         rankTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        rankTable.getTableHeader().setBackground(new java.awt.Color(0xFC, 0xE4, 0xEC));
         rankTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
         // Tabel bawah: detail perhitungan per kriteria
@@ -91,11 +112,11 @@ public class LaporanHasilPanel extends JPanel {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         gapTable = new JTable(gapModel);
-        gapTable.setRowHeight(24);
+        gapTable.setRowHeight(27);
         gapTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         gapTable.getTableHeader().setReorderingAllowed(false);
+        ZebraTableRenderer.apply(gapTable, GAP_ALIGN);
         gapTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        gapTable.getTableHeader().setBackground(new java.awt.Color(0xFC, 0xE4, 0xEC));
         gapTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
         JScrollPane scrollRank = new JScrollPane(rankTable);

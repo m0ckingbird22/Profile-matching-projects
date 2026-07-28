@@ -11,10 +11,12 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -68,38 +70,62 @@ public class LaporanPdfExporter {
     // ===== Header / cover =====
     private void drawHeader(Ctx ctx, Lowongan lowongan) throws IOException {
         ctx.newPage();
-        float y = PAGE_H - 60;
+        float y = PAGE_H - 50;
         float cx = PAGE_W / 2f;
 
+        // Pink top accent strip
         ctx.cs.setNonStrokingColor(PINK_DARK);
         ctx.cs.addRect(0, PAGE_H - 8, PAGE_W, 8);
         ctx.cs.fill();
 
-        ctx.textCentered(F_BOLD, 18, PINK_DARK, cx, y, "SMK Widya Nusantara");
-        y -= 22;
-        ctx.textCentered(F_REG, 11, GREY_TEXT, cx, y,
-            "Bursa Kerja Khusus (BKK) — Sistem Pendukung Keputusan");
-        y -= 16;
-        ctx.textCentered(F_REG, 11, GREY_TEXT, cx, y,
-            "Metode Profile Matching");
-        y -= 22;
+        // === Kop surat: logo di kiri, teks institusi di tengah ===
+        float logoSize = 95f;
+        float logoTop = y + 10;
+        float logoLeft = MARGIN_X;
+        if (ctx.logo != null) {
+            float scale = logoSize / Math.max(ctx.logo.getHeight(), ctx.logo.getWidth());
+            float drawW = ctx.logo.getWidth() * scale;
+            float drawH = ctx.logo.getHeight() * scale;
+            float logoBottom = logoTop - drawH - 6;
+            ctx.cs.drawImage(ctx.logo, logoLeft, logoBottom, drawW, drawH);
+        }
 
-        ctx.cs.setStrokingColor(PINK);
-        ctx.cs.setLineWidth(1.5f);
+        // Baris-baris teks kop (centered horizontal)
+        ctx.textCentered(F_BOLD, 20, PINK_DARK, cx, y, "SMK Widya Nusantara");
+        y -= 20;
+        ctx.textCentered(F_BOLD, 11, GREY_TEXT, cx, y,
+            "Bursa Kerja Khusus (BKK)");
+        y -= 14;
+        ctx.textCentered(F_REG, 9, GREY_TEXT, cx, y,
+            "Jl. Tri Satya Perum Bekasi Baru No.47, Kel. Bojong Rawalumbu,");
+        y -= 12;
+        ctx.textCentered(F_REG, 9, GREY_TEXT, cx, y,
+            "Kec. Rawalumbu, Kota Bekasi, Jawa Barat 17116");
+        y -= 14;
+
+        // Garis ganda khas kop surat: tebal + tipis
+        ctx.cs.setStrokingColor(PINK_DARK);
+        ctx.cs.setLineWidth(2f);
         ctx.cs.moveTo(MARGIN_X, y);
         ctx.cs.lineTo(PAGE_W - MARGIN_X, y);
         ctx.cs.stroke();
-        y -= 28;
+        y -= 3.5f;
+        ctx.cs.setStrokingColor(PINK);
+        ctx.cs.setLineWidth(0.7f);
+        ctx.cs.moveTo(MARGIN_X, y);
+        ctx.cs.lineTo(PAGE_W - MARGIN_X, y);
+        ctx.cs.stroke();
+        y -= 24;
 
         String namaPerusahaan = (lowongan.getPerusahaan() != null)
             ? lowongan.getPerusahaan().getNamaPerusahaan() : "-";
 
-        ctx.textCentered(F_BOLD, 18, PINK_DARK, cx, y,
+        ctx.textCentered(F_BOLD, 16, PINK_DARK, cx, y,
             "HASIL RANKING " + namaPerusahaan.toUpperCase());
-        y -= 22;
-        ctx.textCentered(F_REG, 12, GREY_TEXT, cx, y,
+        y -= 20;
+        ctx.textCentered(F_REG, 11, GREY_TEXT, cx, y,
             "Penempatan Kerja Lulusan");
-        y -= 30;
+        y -= 28;
 
         float boxW = PAGE_W - 2 * MARGIN_X;
         float boxH = 92;
@@ -313,11 +339,27 @@ public class LaporanPdfExporter {
     // ===== Context wrapper =====
     private static class Ctx {
         final PDDocument doc;
+        PDImageXObject logo;
         PDPage page;
         PDPageContentStream cs;
         float y;
 
-        Ctx(PDDocument doc) { this.doc = doc; }
+        Ctx(PDDocument doc) {
+            this.doc = doc;
+            this.logo = loadLogo(doc);
+        }
+
+        /** Load logo dari classpath resource; return null kalau gagal (header tetap jalan tanpa logo). */
+        private static PDImageXObject loadLogo(PDDocument doc) {
+            String path = "/com/bkk/spk/resources/logo_smk.png";
+            try (InputStream is = LaporanPdfExporter.class.getResourceAsStream(path)) {
+                if (is == null) return null;
+                byte[] bytes = is.readAllBytes();
+                return PDImageXObject.createFromByteArray(doc, bytes, "logo_smk.png");
+            } catch (IOException e) {
+                return null;
+            }
+        }
 
         void newPage() throws IOException {
             if (cs != null) cs.close();

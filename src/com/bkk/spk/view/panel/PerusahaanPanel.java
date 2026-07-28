@@ -3,6 +3,7 @@ package com.bkk.spk.view.panel;
 import com.bkk.spk.dao.PerusahaanDAO;
 import com.bkk.spk.model.Perusahaan;
 import com.bkk.spk.view.util.ButtonStyle;
+import com.bkk.spk.view.util.ZebraTableRenderer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -14,6 +15,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.BorderLayout;
@@ -25,6 +27,13 @@ import java.util.List;
 public class PerusahaanPanel extends JPanel {
 
     private static final String[] COLUMNS = {"ID", "Nama Perusahaan", "Bidang Industri", "Alamat"};
+
+    private static final int[] COL_ALIGN = {
+        SwingConstants.LEFT,    // ID (hidden)
+        SwingConstants.LEFT,    // Nama Perusahaan
+        SwingConstants.LEFT,    // Bidang Industri
+        SwingConstants.LEFT     // Alamat
+    };
 
     private final PerusahaanDAO dao = new PerusahaanDAO();
     private final DefaultTableModel tableModel;
@@ -43,7 +52,7 @@ public class PerusahaanPanel extends JPanel {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         table = new JTable(tableModel);
-        table.setRowHeight(26);
+        table.setRowHeight(29);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setReorderingAllowed(false);
 
@@ -54,8 +63,7 @@ public class PerusahaanPanel extends JPanel {
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
 
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        table.getTableHeader().setBackground(new java.awt.Color(0xFC, 0xE4, 0xEC));
+        ZebraTableRenderer.apply(table, COL_ALIGN);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
         JScrollPane scroll = new JScrollPane(table);

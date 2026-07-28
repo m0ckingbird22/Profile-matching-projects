@@ -7,6 +7,7 @@ import com.bkk.spk.model.Kandidat;
 import com.bkk.spk.model.Kriteria;
 import com.bkk.spk.model.NilaiKandidat;
 import com.bkk.spk.view.util.ButtonStyle;
+import com.bkk.spk.view.util.ZebraTableRenderer;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
@@ -19,6 +20,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
@@ -149,6 +151,20 @@ public class InputNilaiPanel extends JPanel {
             cm.getColumn(i).setMaxWidth(90);
         }
 
+        // Zebra striping + alignment: Alternatif LEFT, kolom kriteria CENTER.
+        // Header alignment juga di-set per kolom (array dinamis sesuai jumlah kriteria).
+        int total = cm.getColumnCount();
+        int[] align = new int[total];
+        align[0] = SwingConstants.LEFT;
+        for (int i = 1; i < total; i++) align[i] = SwingConstants.CENTER;
+        for (int i = 0; i < total; i++) {
+            cm.getColumn(i).setCellRenderer(new ZebraTableRenderer(align[i]));
+        }
+        ZebraTableRenderer.applyHeaderAlign(table, align);
+        table.setShowGrid(true);
+        table.setGridColor(BORDER);
+        table.setIntercellSpacing(new Dimension(1, 1));
+
         JTableHeader header = table.getTableHeader();
         header.setFont(new Font("Segoe UI", Font.BOLD, 13));
         header.setBackground(HEADER_BG);
@@ -182,7 +198,7 @@ public class InputNilaiPanel extends JPanel {
             }
 
             Object[] row = new Object[1 + daftarKriteria.size()];
-            row[0] = "A" + (idx + 1) + " — " + k.getNama();
+            row[0] = k.getNisn() + " — " + k.getNama();
             for (int j = 0; j < daftarKriteria.size(); j++) {
                 Kriteria kr = daftarKriteria.get(j);
                 NilaiKandidat nk = mapPerKriteria.get(kr.getIdKriteria());

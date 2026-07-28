@@ -7,6 +7,8 @@ import com.bkk.spk.model.Kriteria;
 import com.bkk.spk.model.Lowongan;
 import com.bkk.spk.model.ProfilIdeal;
 import com.bkk.spk.view.util.ButtonStyle;
+import com.bkk.spk.view.util.ZebraTableRenderer;
+import javax.swing.SwingConstants;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
@@ -36,6 +38,14 @@ public class ProfilIdealPanel extends JPanel {
 
     private static final String[] COLUMNS = {"ID Ideal", "Kode", "Nama Kriteria", "Jenis", "Nilai Target"};
     private static final String[] NILAI_OPTIONS = {"1", "2", "3", "4", "5"};
+
+    private static final int[] COL_ALIGN = {
+        SwingConstants.LEFT,    // ID Ideal (hidden)
+        SwingConstants.LEFT,    // Kode
+        SwingConstants.LEFT,    // Nama Kriteria
+        SwingConstants.CENTER,  // Jenis
+        SwingConstants.CENTER   // Nilai Target
+    };
 
     private final LowonganDAO lowonganDAO = new LowonganDAO();
     private final KriteriaDAO kriteriaDAO = new KriteriaDAO();
@@ -69,8 +79,8 @@ public class ProfilIdealPanel extends JPanel {
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
 
+        ZebraTableRenderer.apply(table, COL_ALIGN);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        table.getTableHeader().setBackground(new java.awt.Color(0xFC, 0xE4, 0xEC));
         table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
         JScrollPane scroll = new JScrollPane(table);

@@ -111,8 +111,8 @@ public class InputNilaiPanel extends JPanel {
         });
         right.add(txtCari);
 
-        JButton btnReload = new JButton("Muat Ulang");
-        ButtonStyle.secondary(btnReload);
+        JButton btnReload = new JButton("Refresh");
+        ButtonStyle.primary(btnReload);
         btnReload.addActionListener(e -> { siapkanStrukturKolom(); muatBaris(); });
         right.add(btnReload);
         toolbar.add(right, BorderLayout.EAST);

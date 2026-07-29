@@ -48,7 +48,7 @@ public class KandidatPanel extends JPanel {
         SwingConstants.LEFT,    // 2 Nama
         SwingConstants.CENTER,  // 3 Th. Lulus
         SwingConstants.CENTER,  // 4 Tgl Lahir
-        SwingConstants.CENTER   // 5 Alamat
+        SwingConstants.LEFT     // 5 Alamat
     };
 
     private static final DateTimeFormatter TGL_FMT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
@@ -134,9 +134,9 @@ public class KandidatPanel extends JPanel {
         right.add(txtCari);
 
         right.add(primary("Tambah", e -> onTambah()));
-        right.add(secondary("Edit", e -> onEdit()));
-        right.add(secondary("Hapus", e -> onHapus()));
-        right.add(secondary("Refresh", e -> refreshData()));
+        right.add(primary("Edit", e -> onEdit()));
+        right.add(primary("Hapus", e -> onHapus()));
+        right.add(primary("Refresh", e -> refreshData()));
 
         toolbar.add(right, BorderLayout.EAST);
         return toolbar;

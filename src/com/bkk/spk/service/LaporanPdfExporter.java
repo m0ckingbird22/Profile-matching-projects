@@ -1,10 +1,8 @@
 package com.bkk.spk.service;
 
 import com.bkk.spk.dao.HasilAkhirDAO;
-import com.bkk.spk.model.Admin;
 import com.bkk.spk.model.HasilAkhir;
 import com.bkk.spk.model.Lowongan;
-import com.bkk.spk.util.Session;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -20,6 +18,7 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Cetak laporan hasil seleksi (Profile Matching) ke PDF memakai PDFBox 2.0.x.
@@ -190,10 +189,9 @@ public class LaporanPdfExporter {
         ctx.ensureSpace(120);
         ctx.spaced(30);
 
-        Admin admin = Session.getCurrentAdmin();
-        String namaAdmin = (admin != null) ? safe(admin.getNama()) : "Admin";
-        String userAdmin = (admin != null) ? "@" + safe(admin.getUsername()) : "@admin";
-        String kotaTanggal = "Cianjur, " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+        String namaAdmin = "Muhammad Afdal S.Kom";
+        String kotaTanggal = "Bekasi, " + LocalDate.now().format(
+            DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy", new Locale("id", "ID")));
 
         float x = PAGE_W - MARGIN_X - 180;
         ctx.text(F_REG, 11, GREY_TEXT, x, ctx.y, kotaTanggal);
@@ -201,8 +199,6 @@ public class LaporanPdfExporter {
         ctx.text(F_REG, 11, GREY_TEXT, x, ctx.y, "Admin BKK,");
         ctx.y -= 56;
         ctx.text(F_BOLD, 11, PINK_DARK, x, ctx.y, namaAdmin);
-        ctx.y -= 14;
-        ctx.text(F_ITALIC, 9, GREY_TEXT, x, ctx.y, userAdmin);
     }
 
     // ===== Generic table renderer =====

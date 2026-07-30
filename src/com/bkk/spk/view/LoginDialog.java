@@ -86,7 +86,7 @@ public class LoginDialog extends JDialog {
         gbc.insets = new Insets(0, 0, 4, 0);
         root.add(lblTitle, gbc);
 
-        JLabel lblSubtitle = new JLabel("Sistem Pendukun Keputusan Profile Matching");
+        JLabel lblSubtitle = new JLabel("Sistem Pendukung Keputusan Profile Matching");
         lblSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblSubtitle.setForeground(new Color(100, 100, 100));
         gbc.gridy = 2;

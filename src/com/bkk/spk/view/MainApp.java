@@ -2,6 +2,9 @@ package com.bkk.spk.view;
 
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.JOptionPane;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 
 /**
@@ -21,13 +24,35 @@ public class MainApp {
     public static void main(String[] args) {
         setupLookAndFeel();
 
+        // Pasang handler global untuk exception yang lepas dari EDT (Swing thread).
+        // Tanpa ini, kalau MainFrame constructor lempar exception, window gak akan
+        // muncul dan app diam-diam nge-hang / ketutup tanpa pesan.
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            StringWriter sw = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(sw));
+            System.err.println("Uncaught exception di thread " + thread.getName() + ":");
+            System.err.println(sw.toString());
+            JOptionPane.showMessageDialog(null, sw.toString(),
+                "Error tak terduga", JOptionPane.ERROR_MESSAGE);
+        });
+
         SwingUtilities.invokeLater(() -> {
-            boolean sukses = LoginDialog.tampilkanDanTunggu();
-            if (!sukses) {
-                System.exit(0);
+            try {
+                boolean sukses = LoginDialog.tampilkanDanTunggu();
+                if (!sukses) {
+                    System.exit(0);
+                }
+                MainFrame frame = new MainFrame();
+                frame.setVisible(true);
+            } catch (Throwable t) {
+                StringWriter sw = new StringWriter();
+                t.printStackTrace(new PrintWriter(sw));
+                System.err.println("Gagal memulai aplikasi:");
+                System.err.println(sw.toString());
+                JOptionPane.showMessageDialog(null, sw.toString(),
+                    "Gagal Memulai Aplikasi", JOptionPane.ERROR_MESSAGE);
+                System.exit(1);
             }
-            MainFrame frame = new MainFrame();
-            frame.setVisible(true);
         });
     }
 
@@ -58,3 +83,4 @@ public class MainApp {
         // Kalau Nimbus juga gak ada, biarkan default LAF sistem
     }
 }
+

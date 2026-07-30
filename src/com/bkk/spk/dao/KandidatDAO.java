@@ -15,6 +15,11 @@ import java.util.List;
 /**
  * DAO (Data Access Object) untuk tabel tb_kandidat.
  * Semua query SQL terkait Kandidat taruh di sini -> jangan taruh SQL di class Form/View.
+ *
+ * PENTING: Connection dari Koneksi.getConnection() adalah SHARED/singleton,
+ * jadi JANGAN pernah taruh di dalam try-with-resources (itu akan auto-close
+ * connection yang masih dipakai DAO lain). Hanya PreparedStatement dan
+ * ResultSet yang boleh di-auto-close per method.
  */
 public class KandidatDAO {
 
@@ -24,8 +29,8 @@ public class KandidatDAO {
         String sql = "INSERT INTO tb_kandidat (nisn, nama, tanggal_lahir, alamat, link_cv, tahun_lulus) " +
                      "VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = Koneksi.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        Connection conn = Koneksi.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, kandidat.getNisn());
             ps.setString(2, kandidat.getNama());
@@ -56,8 +61,8 @@ public class KandidatDAO {
         List<Kandidat> daftarKandidat = new ArrayList<>();
         String sql = "SELECT * FROM tb_kandidat ORDER BY nama ASC";
 
-        try (Connection conn = Koneksi.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
+        Connection conn = Koneksi.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
@@ -75,8 +80,8 @@ public class KandidatDAO {
     public Kandidat getById(int idKandidat) {
         String sql = "SELECT * FROM tb_kandidat WHERE id_kandidat = ?";
 
-        try (Connection conn = Koneksi.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = Koneksi.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idKandidat);
 
@@ -98,8 +103,8 @@ public class KandidatDAO {
         String sql = "UPDATE tb_kandidat SET nisn=?, nama=?, tanggal_lahir=?, alamat=?, link_cv=?, tahun_lulus=? " +
                      "WHERE id_kandidat=?";
 
-        try (Connection conn = Koneksi.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = Koneksi.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, kandidat.getNisn());
             ps.setString(2, kandidat.getNama());
@@ -123,8 +128,8 @@ public class KandidatDAO {
     public boolean delete(int idKandidat) {
         String sql = "DELETE FROM tb_kandidat WHERE id_kandidat = ?";
 
-        try (Connection conn = Koneksi.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = Koneksi.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idKandidat);
             int result = ps.executeUpdate();

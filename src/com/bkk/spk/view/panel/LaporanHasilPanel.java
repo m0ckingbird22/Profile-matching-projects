@@ -270,7 +270,7 @@ public class LaporanHasilPanel extends JPanel implements Refreshable {
     private void muatLowongan() {
         Lowongan selectedSebelumnya = (Lowongan) cbLowongan.getSelectedItem();
         cbLowongan.removeAllItems();
-        List<Lowongan> daftar = lowonganDAO.getAll();
+        List<Lowongan> daftar = lowonganDAO.getAllBuka();
         for (Lowongan l : daftar) cbLowongan.addItem(l);
         if (selectedSebelumnya != null) {
             cbLowongan.setSelectedItem(selectedSebelumnya);

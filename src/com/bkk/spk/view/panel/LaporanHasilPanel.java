@@ -11,6 +11,7 @@ import com.bkk.spk.model.Lowongan;
 import com.bkk.spk.model.NilaiKandidat;
 import com.bkk.spk.model.ProfilIdeal;
 import com.bkk.spk.service.LaporanPdfExporter;
+import com.bkk.spk.view.Refreshable;
 import com.bkk.spk.view.util.ButtonStyle;
 import com.bkk.spk.view.util.ZebraTableRenderer;
 
@@ -45,7 +46,7 @@ import java.util.Map;
  * klik baris kandidat → lihat detail perhitungan (Nilai, Target, GAP, Bobot) per kriteria
  * + label formula NCF/NSF/Nilai Akhir yang dihitung step-by-step.
  */
-public class LaporanHasilPanel extends JPanel {
+public class LaporanHasilPanel extends JPanel implements Refreshable {
 
     private static final String[] RANK_COLUMNS = {
         "Rank", "NISN", "Nama", "NCF", "NSF", "Total", "Status"
@@ -276,6 +277,12 @@ public class LaporanHasilPanel extends JPanel {
         } else if (!daftar.isEmpty()) {
             cbLowongan.setSelectedIndex(0);
         }
+    }
+
+    @Override
+    public void refreshData() {
+        muatLowongan();
+        muatHasilUntukLowonganTerpilih();
     }
 
     private void muatHasilUntukLowonganTerpilih() {

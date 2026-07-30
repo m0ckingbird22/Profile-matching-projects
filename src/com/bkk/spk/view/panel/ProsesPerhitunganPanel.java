@@ -6,6 +6,7 @@ import com.bkk.spk.model.HasilAkhir;
 import com.bkk.spk.model.Lowongan;
 import com.bkk.spk.service.ProfileMatchingService;
 import com.bkk.spk.util.Session;
+import com.bkk.spk.view.Refreshable;
 import com.bkk.spk.view.util.ButtonStyle;
 import com.bkk.spk.view.util.ZebraTableRenderer;
 
@@ -37,7 +38,7 @@ import java.util.List;
  *   2. Tampilkan hasil di tabel (Rank, NISN, Nama, NCF, NSF, Total, Status).
  *   3. Status: ranking <= kuota -> LULUS, selebihnya -> Belum Lulus.
  */
-public class ProsesPerhitunganPanel extends JPanel {
+public class ProsesPerhitunganPanel extends JPanel implements Refreshable {
 
     private static final String[] COLUMNS = {
         "Rank", "NISN", "Nama", "NCF", "NSF", "Total", "Status"
@@ -124,6 +125,13 @@ public class ProsesPerhitunganPanel extends JPanel {
         for (Lowongan l : daftar) cbLowongan.addItem(l);
         cbLowongan.setSelectedIndex(-1);
         if (!daftar.isEmpty()) cbLowongan.setSelectedIndex(0);
+    }
+
+    @Override
+    public void refreshData() {
+        muatLowonganBuka();
+        tableModel.setRowCount(0);
+        txtLog.setText("Log proses perhitungan akan muncul di sini.\n");
     }
 
     private void onProses() {

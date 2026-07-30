@@ -53,6 +53,11 @@ public class MainFrame extends javax.swing.JFrame implements Navigator {
     private final JLabel lblHalaman;
     private final JLabel lblAdmin;
 
+    // Panel yang butuh refresh saat ditampilkan ulang (load data dari DB).
+    private KriteriaProfilIdealPanel kriteriaPanel;
+    private ProsesPerhitunganPanel prosesPanel;
+    private LaporanHasilPanel laporanPanel;
+
     public MainFrame() {
         super("SPK Profile Matching — Bursa Kerja Khusus");
 
@@ -164,13 +169,17 @@ public class MainFrame extends javax.swing.JFrame implements Navigator {
     private Component buildContent() {
         // Daftarin SEMUA card di awal biar show() gak error.
         // Card yang belum ada panel-nya pakai placeholder dulu.
+        kriteriaPanel = new KriteriaProfilIdealPanel();
+        prosesPanel = new ProsesPerhitunganPanel();
+        laporanPanel = new LaporanHasilPanel();
+
         cardPanel.add(new DashboardPanel(), DASHBOARD);
         cardPanel.add(new KandidatPanel(), KANDIDAT);
         cardPanel.add(new PerusahaanLowonganPanel(), PERUSAHAAN_LOWONGAN);
-        cardPanel.add(new KriteriaProfilIdealPanel(), KRITERIA);
+        cardPanel.add(kriteriaPanel, KRITERIA);
         cardPanel.add(new InputNilaiPanel(), INPUT_NILAI);
-        cardPanel.add(new ProsesPerhitunganPanel(), PROSES_PERHITUNGAN);
-        cardPanel.add(new LaporanHasilPanel(), LAPORAN_HASIL);
+        cardPanel.add(prosesPanel, PROSES_PERHITUNGAN);
+        cardPanel.add(laporanPanel, LAPORAN_HASIL);
 
         return cardPanel;
     }
@@ -204,6 +213,29 @@ public class MainFrame extends javax.swing.JFrame implements Navigator {
     private void navigateTo(String cardName) {
         cardLayout.show(cardPanel, cardName);
         lblHalaman.setText(prettyTitle(cardName));
+        refreshPanel(cardName);
+    }
+
+    /**
+     * Refresh data panel yang ditampilkan supaya selalu sinkron dengan DB.
+     * Penting untuk panel yang menampilkan combo lowongan: perubahan status
+     * BUKA/TUTUP dari halaman Data Perusahaan baru akan terlihat setelah refresh.
+     */
+    private void refreshPanel(String cardName) {
+        switch (cardName) {
+            case KRITERIA:
+                kriteriaPanel.refreshData();
+                break;
+            case PROSES_PERHITUNGAN:
+                prosesPanel.refreshData();
+                break;
+            case LAPORAN_HASIL:
+                laporanPanel.refreshData();
+                break;
+            default:
+                // panel lain belum butuh refresh saat navigasi
+                break;
+        }
     }
 
     // --- Builders ---

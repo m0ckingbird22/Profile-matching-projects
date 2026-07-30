@@ -6,6 +6,7 @@ import com.bkk.spk.dao.ProfilIdealDAO;
 import com.bkk.spk.model.Kriteria;
 import com.bkk.spk.model.Lowongan;
 import com.bkk.spk.model.ProfilIdeal;
+import com.bkk.spk.view.Refreshable;
 import com.bkk.spk.view.util.ButtonStyle;
 import com.bkk.spk.view.util.ZebraTableRenderer;
 import javax.swing.SwingConstants;
@@ -34,7 +35,7 @@ import java.util.Map;
  * Disimpan per-row: id_profil_ideal sudah ada → update; belum ada → insert.
  * Tracking id lewat kolom tersembunyi di tabel (kolom 0).
  */
-public class ProfilIdealPanel extends JPanel {
+public class ProfilIdealPanel extends JPanel implements Refreshable {
 
     private static final String[] COLUMNS = {"ID Ideal", "Kode", "Nama Kriteria", "Jenis", "Nilai Target"};
     private static final String[] NILAI_OPTIONS = {"1", "2", "3", "4", "5"};
@@ -127,6 +128,12 @@ public class ProfilIdealPanel extends JPanel {
         for (Lowongan l : daftar) cbLowongan.addItem(l);
         cbLowongan.setSelectedIndex(-1);
         if (!daftar.isEmpty()) cbLowongan.setSelectedIndex(0);
+    }
+
+    @Override
+    public void refreshData() {
+        muatLowongan();
+        muatTabelUntukLowonganTerpilih();
     }
 
     private void muatTabelUntukLowonganTerpilih() {

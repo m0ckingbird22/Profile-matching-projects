@@ -206,7 +206,7 @@ public class LaporanPdfExporter {
         String[] row(int i, int colCount);
     }
 
-    private void drawTable(Ctx ctx, String[] headers, float[] widths,
+private void drawTable(Ctx ctx, String[] headers, float[] widths,
                            int rowCount, RowSource src) throws IOException {
         int colCount = headers.length;
         float avail = PAGE_W - 2 * MARGIN_X;
@@ -230,18 +230,22 @@ public class LaporanPdfExporter {
         drawTableHeader(ctx, headers, widths, x0, contentW, headerH);
         y -= headerH;
 
+        float segmentTop = ctx.y;
+
         for (int r = 0; r < rowCount; r++) {
             if (y - rowH < MARGIN_BOTTOM) {
+                drawSegmentBorder(ctx, x0, contentW, segmentTop, y);
+
                 ctx.y = y;
                 ctx.newPage();
                 y = ctx.y;
                 drawTableHeader(ctx, headers, widths, x0, contentW, headerH);
                 y -= headerH;
+                segmentTop = ctx.y;
             }
 
             String[] row = src.row(r, colCount);
 
-            // Zebra
             if (r % 2 == 1) {
                 ctx.cs.setNonStrokingColor(new Color(0xFA, 0xF6, 0xF8));
                 ctx.cs.addRect(x0, y - rowH, contentW, rowH);
@@ -268,12 +272,17 @@ public class LaporanPdfExporter {
             y -= rowH;
         }
 
-        ctx.cs.setStrokingColor(PINK);
-        ctx.cs.setLineWidth(0.8f);
-        ctx.cs.addRect(x0, y, contentW, ctx.y - y);
-        ctx.cs.stroke();
+        drawSegmentBorder(ctx, x0, contentW, segmentTop, y);
 
         ctx.y = y - 4;
+    }
+
+    private void drawSegmentBorder(Ctx ctx, float x0, float contentW,
+                                    float segmentTop, float segmentBottom) throws IOException {
+        ctx.cs.setStrokingColor(PINK);
+        ctx.cs.setLineWidth(0.8f);
+        ctx.cs.addRect(x0, segmentBottom, contentW, segmentTop - segmentBottom);
+        ctx.cs.stroke();
     }
 
     private void drawTableHeader(Ctx ctx, String[] headers, float[] widths,

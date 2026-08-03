@@ -189,7 +189,7 @@ public class LaporanPdfExporter {
         ctx.ensureSpace(120);
         ctx.spaced(30);
 
-        String namaAdmin = "Muhammad Afdal S.Kom";
+        String namaAdmin = "Muhammad Afdal,S.Kom.,Gr.";
         String kotaTanggal = "Bekasi, " + LocalDate.now().format(
             DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy", new Locale("id", "ID")));
 
